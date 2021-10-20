@@ -8,22 +8,20 @@
 # using the specified input files. This data is checked to hold this equation: 
 # monthly opening + monthly credits - monthly debits = monthly closing
 
-import sys
 import csv
 import re
 import os
 import argparse
+import calendar
+from tally_tab import tally_tab
 
-def validate():
+def validate(balance_file, transaction_file):
 
     """
     Given a balance file & a transaction file as arguments in command-line. They are validated
     in terms of existence, readability & nullability.
 
     """
-
-    balance_file = sys.argv[1]
-    transaction_file = sys.argv[2]
 
     size1 = os.path.getsize(balance_file)
     size2 = os.path.getsize(transaction_file)
@@ -41,7 +39,7 @@ def tally_check():
     balance_file. Total credits & debits are generated from transaction_file.
     
     """
-    balance_file, transaction_file = validate()
+    validate(balance_file, transaction_file)
 
     # Read from balance_file
 
@@ -69,6 +67,7 @@ def tally_check():
 
         opening_amout=balance_rows[0][2]
         for month in range(1,13):
+            month_name = calendar.month_abbr[month]
             month_only=str(month).zfill(2)
             total_credits = 0.0
             total_debits = 0.0
@@ -83,7 +82,7 @@ def tally_check():
                     else:
                         total_debits =  round(total_debits + float(row[2]),2)
                         # print(total_debits)
-            writer.writerow({'Month': month, 'Opening': opening_amout, 'Closing': closing_amount, 'Total Credits': total_credits, 'Total Debits': -(total_debits)})
+            writer.writerow({'Month': month_name, 'Opening': opening_amout, 'Closing': closing_amount, 'Total Credits': total_credits, 'Total Debits': -(total_debits)})
             opening_amout = closing_amount
 
 def validate_tally():
@@ -96,7 +95,7 @@ def validate_tally():
     file = open('tally_checking_report.csv' , 'r')
     csvreader = csv.reader(file)
     header = next(csvreader)
-    rows = []
+    # rows = []
     for row in csvreader:
         # rows.append(row)
     # for data in rows:
@@ -107,7 +106,14 @@ def validate_tally():
             print("Validated")
         else:
             print("Error in tally checking report")
-            
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--balanceFile", help="Path to the balance file")
+parser.add_argument("--transactionFile", help="Path to the transaction file")
+args = parser.parse_args()  
+balance_file = args.balanceFile
+transaction_file = args.transactionFile
+    
 tally_check()
 validate_tally()
